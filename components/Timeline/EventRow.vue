@@ -120,7 +120,7 @@ export default Vue.extend({
   data() {
     return {
       imageStatus: "not loaded",
-      images: [],
+      images: [] as any[],
       showingMeta: false,
       hover: false,
       tempTo: undefined as DateTime | undefined,
@@ -185,8 +185,14 @@ export default Vue.extend({
     hasLocations(): boolean {
       return this.event.event.locations.length > 0;
     },
-    hasImages(): boolean {
+    hasGoogleImages(): boolean {
       return !!this.event.event.googlePhotosLink;
+    },
+    hasMarkdownImages(): boolean {
+      return this.event.event.images.length > 0;
+    },
+    hasImages(): boolean {
+      return this.hasGoogleImages || this.hasMarkdownImages;
     },
     hasSupplemental(): boolean {
       return !!this.supplemental.length;
@@ -399,12 +405,17 @@ export default Vue.extend({
         "pointer-events-none cursor-ew-resize"
       );
     },
-    async loadImages() {
+    async loadGoogleImages() {
       this.imageStatus = "loading";
       const imagesResponse = await fetch(
         `https://k.npkn.net/google-photos/${this.event.event.googlePhotosLink}`
       );
       this.images = await imagesResponse.json();
+      this.imageStatus = "loaded";
+    },
+    loadMarkdownImages() {
+      this.imageStatus = "loading";
+      this.images = this.event.event.images;
       this.imageStatus = "loaded";
     },
     togglePhotos(e: MouseEvent) {
@@ -413,8 +424,11 @@ export default Vue.extend({
       }
       e.preventDefault();
       this.showingMeta = !this.showingMeta;
-      if (this.imageStatus === "not loaded" && this.hasImages) {
-        this.loadImages();
+      if (this.imageStatus === "not loaded" && this.hasGoogleImages) {
+        this.loadGoogleImages();
+      }
+      if (this.imageStatus === "not loaded" && this.hasMarkdownImages) {
+        this.loadMarkdownImages();
       }
     },
     getWidthForRange(range: DateRange): number {

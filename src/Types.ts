@@ -173,6 +173,7 @@ export class DateRangePart implements DateRange {
 }
 
 export const LINK_REGEX = /\[([^\]]+)\]\(((https?:\/\/)?[\w\d./?=\-#]+)\)/g;
+export const IMAGE_REGEX = /!\[([^\]]*)\]\(((https?:\/\/)?[\w\d./?=\-#]+)\)/g;
 export const LOCATION_REGEX = /\[([^\]]+)\]\((location|map)\)/g;
 export const GOOGLE_PHOTOS_REGEX = /(?:https:\/\/)?photos.app.goo.gl\/\w+/g;
 export const AT_REGEX = /@([\w\d\/]+)/g;
@@ -184,6 +185,7 @@ export class EventDescription {
   tags: string[] = [];
   supplemental: string[];
   googlePhotosLink?: string;
+  images: string[] = [];
   locations: string[] = [];
   id?: string;
   percent?: number;
@@ -191,6 +193,10 @@ export class EventDescription {
   constructor(lines: string[]) {
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i];
+      line = line.replace(IMAGE_REGEX, (match, alt, url) => {
+        this.images.push(url);
+        return "";
+      });
       line = line.replace(GOOGLE_PHOTOS_REGEX, (match) => {
         if (!this.googlePhotosLink) {
           this.googlePhotosLink = match;
